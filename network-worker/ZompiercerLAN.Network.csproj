@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <PlatformTarget>x64</PlatformTarget>
+    <AssemblyName>ZompiercerLAN.Network</AssemblyName>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <Version>1.0.0</Version>
+    <AppConfig>App.config</AppConfig>
+    <NuGetAudit>false</NuGetAudit>
+    <!-- No PDB: its path would put the local build folder into the shipped EXE. -->
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net472" Version="1.0.3" PrivateAssets="all" />
+    <Compile Include="../LanSandboxProcess.cs" Link="LanSandboxProcess.cs" />
+    <Compile Include="../LanIpc.cs" Link="LanIpc.cs" />
+    <Compile Include="../LanProtocol.cs" Link="LanProtocol.cs" />
+    <Compile Include="../HostCombatInventory.cs" Link="HostCombatInventory.cs" />
+    <Compile Include="../LanSecurity.cs" Link="LanSecurity.cs" />
+    <Compile Include="../LanPeerGuard.cs" Link="LanPeerGuard.cs" />
+    <Compile Include="../LanNetworkPolicy.cs" Link="LanNetworkPolicy.cs" />
+    <Compile Include="../LanPake.cs" Link="LanPake.cs" />
+    <Compile Include="../LanDiscovery.cs" Link="LanDiscovery.cs" />
+    <Compile Include="../LanRoomDiscovery.cs" Link="LanRoomDiscovery.cs" />
+    <Compile Include="../LanPairing.cs" Link="LanPairing.cs" />
+    <Compile Include="../LanRelayClient.cs" Link="LanRelayClient.cs" />
+    <Compile Include="../LanRelayLink.cs" Link="LanRelayLink.cs" />
+    <Compile Include="../LanRelayPairing.cs" Link="LanRelayPairing.cs" />
+    <Reference Include="BouncyCastle.Cryptography"><HintPath>../vendor/BouncyCastle/2.7.0/BouncyCastle.Cryptography.dll</HintPath><Private>true</Private></Reference>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <NuGetAudit>false</NuGetAudit>
+    <DefineConstants>$(DefineConstants);SECURITY_CHECKS</DefineConstants>
+    <!-- The relay checks run the real ZompiercerRelay server from the sibling folder, when it is there. -->
+    <RelayServerProject>$(MSBuildProjectDirectory)/../../ZompiercerRelay/src/ZompiercerRelay/ZompiercerRelay.csproj</RelayServerProject>
+  </PropertyGroup>
+  <PropertyGroup Condition="Exists('$(RelayServerProject)')">
+    <DefineConstants>$(DefineConstants);RELAY_SERVER</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../LanProtocol.cs" Link="LanProtocol.cs" />
+    <Compile Include="../HostCombatInventory.cs" Link="HostCombatInventory.cs" />
+    <Compile Include="../LanCombatSync.cs" Link="LanCombatSync.cs" />
+    <Compile Include="../LanSecurity.cs" Link="LanSecurity.cs" />
+    <Compile Include="../LanPeerGuard.cs" Link="LanPeerGuard.cs" />
+    <Compile Include="../LanIpc.cs" Link="LanIpc.cs" />
+    <Compile Include="../LanBrokerState.cs" Link="LanBrokerState.cs" />
+    <Compile Include="../LanNetworkPolicy.cs" Link="LanNetworkPolicy.cs" />
+    <Compile Include="../LanPake.cs" Link="LanPake.cs" />
+    <Compile Include="../LanDiscovery.cs" Link="LanDiscovery.cs" />
+    <Compile Include="../LanRoomDiscovery.cs" Link="LanRoomDiscovery.cs" />
+    <Compile Include="../LanPairing.cs" Link="LanPairing.cs" />
+    <Compile Include="../LanRelayClient.cs" Link="LanRelayClient.cs" />
+    <Compile Include="../LanRelayLink.cs" Link="LanRelayLink.cs" />
+    <Compile Include="../LanRelayPairing.cs" Link="LanRelayPairing.cs" />
+    <Compile Include="../LanRetention.cs" Link="LanRetention.cs" />
+    <Compile Include="../LanValueCodec.cs" Link="LanValueCodec.cs" />
+    <Compile Include="../LanBeaverSaveCodec.cs" Link="LanBeaverSaveCodec.cs" />
+    <Compile Include="../LanBlob.cs" Link="LanBlob.cs" />
+    <Compile Include="../LanChatChannel.cs" Link="LanChatChannel.cs" />
+    <Compile Include="../LanGuestSchema.cs" Link="LanGuestSchema.cs" />
+    <Compile Include="../LanGuestStore.cs" Link="LanGuestStore.cs" />
+    <Compile Include="../LanGuestSync.cs" Link="LanGuestSync.cs" />
+    <Compile Include="../LanStorage.cs" Link="LanStorage.cs" />
+    <Compile Include="../LanGuestLedger.cs" Link="LanGuestLedger.cs" />
+    <Compile Include="../LanGuestStats.cs" Link="LanGuestStats.cs" />
+    <Compile Include="../LanArenaZone.cs" Link="LanArenaZone.cs" />
+    <Compile Include="../LanTrainDecorData.cs" Link="LanTrainDecorData.cs" />
+    <ProjectReference Include="$(RelayServerProject)" Condition="Exists('$(RelayServerProject)')" />
+    <Compile Remove="RelayChecks.cs" Condition="!Exists('$(RelayServerProject)')" />
+    <Reference Include="BouncyCastle.Cryptography"><HintPath>../vendor/BouncyCastle/2.7.0/BouncyCastle.Cryptography.dll</HintPath><Private>true</Private></Reference>
+  </ItemGroup>
+</Project>
