@@ -1,0 +1,68 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <AssemblyName>ZompiercerLAN</AssemblyName>
+    <RootNamespace>ZompiercerLAN</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+    <!-- No PDB: its path would put the local build folder into the shipped DLL. -->
+    <DebugType>none</DebugType>
+    <!-- The game folder (with Zompiercer.exe): by default the parent of this folder; or pass -p:GameDir=... -->
+    <GameDir Condition="'$(GameDir)' == ''">$(MSBuildProjectDirectory)/..</GameDir>
+    <GameManaged>$(GameDir)/Zompiercer_Data/Managed</GameManaged>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="diagnostics/**/*.cs" />
+    <Compile Remove="security-checks/**/*.cs" />
+    <Compile Remove="network-worker/**/*.cs" />
+    <Compile Remove="LanSecurity.cs;LanPake.cs;LanDiscovery.cs;LanPairing.cs;LanRoomDiscovery.cs;LanRelayClient.cs;LanRelayLink.cs;LanRelayPairing.cs" />
+    <ProjectReference Include="network-worker/ZompiercerLAN.Network.csproj" ReferenceOutputAssembly="false" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net472" Version="1.0.3" PrivateAssets="all" />
+    <!-- DPAPI for the guest identity (LanPlayerIdentity); System.Security.dll ships with the game. -->
+    <Reference Include="System.Security" />
+    <Reference Include="BepInEx"><HintPath>vendor/BepInEx/BepInEx/core/BepInEx.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="0Harmony"><HintPath>vendor/BepInEx/BepInEx/core/0Harmony.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Assembly-CSharp"><HintPath>$(GameManaged)/Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Assembly-CSharp-firstpass"><HintPath>$(GameManaged)/Assembly-CSharp-firstpass.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine"><HintPath>$(GameManaged)/UnityEngine.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(GameManaged)/UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.IMGUIModule"><HintPath>$(GameManaged)/UnityEngine.IMGUIModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.TextRenderingModule"><HintPath>$(GameManaged)/UnityEngine.TextRenderingModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.PhysicsModule"><HintPath>$(GameManaged)/UnityEngine.PhysicsModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.AnimationModule"><HintPath>$(GameManaged)/UnityEngine.AnimationModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.AIModule"><HintPath>$(GameManaged)/UnityEngine.AIModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.AudioModule"><HintPath>$(GameManaged)/UnityEngine.AudioModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.ParticleSystemModule"><HintPath>$(GameManaged)/UnityEngine.ParticleSystemModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.InputLegacyModule"><HintPath>$(GameManaged)/UnityEngine.InputLegacyModule.dll</HintPath><Private>false</Private></Reference>
+    <!-- The game reads the mouse only through the Input System (its legacy Input manager is disabled). -->
+    <Reference Include="Unity.InputSystem"><HintPath>$(GameManaged)/Unity.InputSystem.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.UI"><HintPath>$(GameManaged)/UnityEngine.UI.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+  <Target Name="StageNetworkWorker" BeforeTargets="CoreCompile" DependsOnTargets="ResolveProjectReferences">
+    <PropertyGroup>
+      <WorkerOutput>$(MSBuildProjectDirectory)/network-worker/bin/$(Configuration)/net472</WorkerOutput>
+      <WorkerStage>$(MSBuildProjectDirectory)/network-worker/bin/$(Configuration)/sandbox</WorkerStage>
+      <WorkerHashSource>$(IntermediateOutputPath)LanWorkerIntegrity.g.cs</WorkerHashSource>
+    </PropertyGroup>
+    <MakeDir Directories="$(WorkerStage)" />
+    <Copy SourceFiles="$(WorkerOutput)/ZompiercerLAN.Network.exe;$(WorkerOutput)/ZompiercerLAN.Network.exe.config;$(WorkerOutput)/BouncyCastle.Cryptography.dll" DestinationFolder="$(WorkerStage)" />
+    <GetFileHash Files="$(WorkerStage)/ZompiercerLAN.Network.exe" Algorithm="SHA256"><Output TaskParameter="Hash" PropertyName="WorkerExeHash" /></GetFileHash>
+    <GetFileHash Files="$(WorkerStage)/ZompiercerLAN.Network.exe.config" Algorithm="SHA256"><Output TaskParameter="Hash" PropertyName="WorkerConfigHash" /></GetFileHash>
+    <WriteLinesToFile File="$(WorkerHashSource)" Overwrite="true" Lines="namespace ZompiercerLAN { internal static class LanWorkerIntegrity { internal const string Executable = &quot;$(WorkerExeHash)&quot;%3B internal const string Configuration = &quot;$(WorkerConfigHash)&quot;%3B internal const string Crypto = &quot;4F96977E9C67334742C683410B3A361258219F0D3084A5E0BC10FBA96CF23A0D&quot;%3B } }" />
+    <ItemGroup><Compile Include="$(WorkerHashSource)" /></ItemGroup>
+  </Target>
+  <Target Name="CopyNetworkWorker" AfterTargets="Build">
+    <MakeDir Directories="$(TargetDir)ZompiercerLAN.Network" />
+    <Copy SourceFiles="$(WorkerStage)/ZompiercerLAN.Network.exe;$(WorkerStage)/ZompiercerLAN.Network.exe.config;$(WorkerStage)/BouncyCastle.Cryptography.dll" DestinationFolder="$(TargetDir)ZompiercerLAN.Network" />
+  </Target>
+  <Target Name="CheckGameFolder" BeforeTargets="ResolveReferences">
+    <Error Condition="!Exists('$(GameManaged)/Assembly-CSharp.dll')" Text="Zompiercer game files not found in $(GameManaged). Put this folder into the game folder or build with -p:GameDir=&quot;path to the folder with Zompiercer.exe&quot;." />
+  </Target>
+  <Target Name="VerifyCryptography" BeforeTargets="ResolveReferences">
+    <GetFileHash Files="$(MSBuildProjectDirectory)/vendor/BouncyCastle/2.7.0/BouncyCastle.Cryptography.dll" Algorithm="SHA256">
+      <Output TaskParameter="Hash" PropertyName="CryptographyHash" />
+    </GetFileHash>
+    <Error Condition="'$(CryptographyHash)' != '4F96977E9C67334742C683410B3A361258219F0D3084A5E0BC10FBA96CF23A0D'" Text="Bouncy Castle dependency checksum mismatch." />
+  </Target>
+</Project>
